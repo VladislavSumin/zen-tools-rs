@@ -388,6 +388,7 @@ dependencies = [
 name = "ignored_tests_notify_telegram"
 version = "0.1.0"
 dependencies = [
+ "chrono",
  "clap",
  "core_ignored_tests_parser",
  "tokio",
