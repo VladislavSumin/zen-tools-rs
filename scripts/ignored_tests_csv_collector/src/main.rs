@@ -6,7 +6,8 @@ use clap::Parser;
 
 use core_ignored_tests_parser::parse_ignored_tests;
 
-fn main() {
+#[tokio::main]
+async fn main() {
     let start = Instant::now();
 
     let args = Args::parse();
@@ -20,7 +21,7 @@ fn main() {
 
     let mut writter = csv::Writer::from_path("ignored_tests.csv").unwrap();
 
-    parse_ignored_tests(test_path).iter().for_each(|ignore_info| {
+    parse_ignored_tests(test_path).await.iter().for_each(|ignore_info| {
         writter.serialize(ignore_info).unwrap();
     });
 

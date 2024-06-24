@@ -14,13 +14,19 @@ lazy_static! {
     static ref GIT_TIME_REGEX: Regex = Regex::new("author-time ([0-9]+)").unwrap();
 }
 
-pub fn parse_ignored_tests<P: AsRef<Path>>(path: P) -> Vec<IgnoreInfo> {
-    WalkDir::new(path)
+pub async fn parse_ignored_tests<P: AsRef<Path>>(path: P) -> Vec<IgnoreInfo> {
+    futures::future::join_all(
+        WalkDir::new(path)
+            .into_iter()
+            .map(|x| { x.unwrap() })
+            .filter(|file| { file.file_type().is_file() })
+            .filter(|file| { file.file_name().to_string_lossy().ends_with(".kt") })
+            .map(|file| {
+                tokio::task::spawn(async move { process_file(file.path()) })
+            })
+    ).await
         .into_iter()
-        .map(|x| { x.unwrap() })
-        .filter(|file| { file.file_type().is_file() })
-        .filter(|file| { file.file_name().to_string_lossy().ends_with(".kt") })
-        .filter_map(|file| { process_file(file.path()) })
+        .filter_map(|result| { result.unwrap() })
         .collect()
 }
 

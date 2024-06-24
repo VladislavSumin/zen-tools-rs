@@ -6,6 +6,7 @@ edition = "2021"
 [dependencies]
 core_ignored_tests_parser = { path = "../../core/ignored_tests_parser" }
 
+tokio = { workspace = true }
 clap = { workspace = true }
 tracing = { workspace = true }
 tracing-subscriber = { workspace = true }
