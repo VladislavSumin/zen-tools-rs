@@ -53,14 +53,14 @@ fn process_file(path: &Path) -> Option<IgnoreInfo> {
         let (ignore_line_index, ignore_captures) = ignore_match.unwrap();
 
         // Ищем дату когда была поставлена аннотация.
-        let ignore_date = get_line_modification_time(path, ignore_line_index + 1).to_string();
+        let ignore_date = get_line_modification_time(path, ignore_line_index + 1);
 
         Some(IgnoreInfo {
             file_name: path.file_name().unwrap().to_string_lossy().to_string(),
             comment: ignore_captures.get(2).map(|t| { t.as_str().to_string() }),
             author,
             test_module,
-            ignore_date_formatted: ignore_date,
+            ignore_date,
         })
     } else {
         None
@@ -106,5 +106,5 @@ pub struct IgnoreInfo {
     /// Тестовый модуль
     pub test_module: Option<String>,
     /// Дата установки аннотации игнор
-    pub ignore_date_formatted: String,
+    pub ignore_date: DateTime<Utc>,
 }

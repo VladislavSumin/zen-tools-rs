@@ -151,6 +151,7 @@ dependencies = [
  "iana-time-zone",
  "js-sys",
  "num-traits",
+ "serde",
  "wasm-bindgen",
  "windows-targets 0.52.5",
 ]
@@ -386,6 +387,13 @@ dependencies = [
 [[package]]
 name = "ignored_tests_notify_telegram"
 version = "0.1.0"
+dependencies = [
+ "clap",
+ "core_ignored_tests_parser",
+ "tokio",
+ "tracing",
+ "tracing-subscriber",
+]
 
 [[package]]
 name = "is_terminal_polyfill"
