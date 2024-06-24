@@ -11,17 +11,16 @@ use regex::Regex;
 use serde::Serialize;
 use walkdir::WalkDir;
 
-type Result<T> = std::result::Result<T, Box<dyn std::error::Error>>;
-
 lazy_static! {
     static ref IGNORE_ANNOTATION_REGEX: Regex = Regex::new("@Ignore(\\(\"(.+)\"\\))?$").unwrap();
     static ref DEVELOPER_ANNOTATION_REGEX: Regex = Regex::new("@Developer\\(Developers\\.(.+)\\)").unwrap();
+    static ref TEST_MODULE_ANNOTATION_REGEX: Regex = Regex::new("@TestModule\\(TestModules\\.(.+)\\)").unwrap();
     static ref GIT_TIME_REGEX: Regex = Regex::new("author-time ([0-9]+)").unwrap();
 }
 
 fn main() {
     let start = Instant::now();
-    
+
     let args = Args::parse();
 
     tracing_subscriber::fmt()
@@ -60,9 +59,12 @@ fn process_file(path: &Path) -> Option<IgnoreInfo> {
 
     // Если нашли игнор возвращаем информацию о тесте.
     if ignore_match.is_some() {
-        // Ищем автора теста
         let author = file_content.lines()
             .filter_map(|x| { DEVELOPER_ANNOTATION_REGEX.captures(x) })
+            .next().map(|captures| { captures.get(1).unwrap().as_str().to_string() });
+
+        let test_module = file_content.lines()
+            .filter_map(|x| { TEST_MODULE_ANNOTATION_REGEX.captures(x) })
             .next().map(|captures| { captures.get(1).unwrap().as_str().to_string() });
 
         let (ignore_line_index, ignore_captures) = ignore_match.unwrap();
@@ -74,6 +76,7 @@ fn process_file(path: &Path) -> Option<IgnoreInfo> {
             file_name: path.file_name().unwrap().to_string_lossy().to_string(),
             comment: ignore_captures.get(2).map(|t| { t.as_str().to_string() }),
             author,
+            test_module,
             ignore_date_formatted: ignore_date,
         })
     } else {
@@ -119,6 +122,8 @@ struct IgnoreInfo {
     comment: Option<String>,
     /// Автор теста
     author: Option<String>,
+    /// Тестовый модуль
+    test_module: Option<String>,
     /// Дата установки аннотации игнор
     ignore_date_formatted: String,
 }
