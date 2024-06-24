@@ -8,3 +8,10 @@ pub struct AllureJson {
     pub childrens: Option<Vec<AllureJson>>,
     pub flaky: Option<bool>,
 }
+
+
+#[derive(Deserialize, Debug)]
+#[serde(rename_all = "camelCase")]
+pub struct TestInfoJson {
+    pub full_name: String,
+}

@@ -1,10 +1,9 @@
 #![allow(async_fn_in_trait)]
 
 use std::path::PathBuf;
-use tracing::info;
 
 pub use crate::allure_data_provider::AllureDataProvider;
-use crate::json_models::AllureJson;
+use crate::json_models::{AllureJson, TestInfoJson};
 
 mod json_models;
 mod allure_data_provider;
@@ -16,15 +15,21 @@ pub async fn parse_allure_report<T: AllureDataProvider>(data_provider: &T) -> Ve
     let uids = get_test_uids_recursively(&allure_report);
     futures::future::join_all(
         uids.into_iter().map(|uid| {
-            tokio::task::spawn(async move { parse_test_info(&uid).await })
+            let data_provider = data_provider.clone();
+            tokio::task::spawn(async move { parse_test_info(&uid, data_provider).await })
         })
     ).await.into_iter()
         .map(|result| { result.unwrap() })
         .collect()
 }
 
-async fn parse_test_info(uid: &String) -> TestInfo {
-    TestInfo
+async fn parse_test_info<T: AllureDataProvider>(uid: &String, data_provider: T) -> TestInfo {
+    let test_path = PathBuf::from(format!("data/test-cases/{uid}.json"));
+    let test_report = data_provider.get_file_string(test_path).await;
+    let test_report: TestInfoJson = serde_json::from_str(&test_report).unwrap();
+    TestInfo {
+        full_name: test_report.full_name
+    }
 }
 
 /// Возвращает все uid тестов в данном отчете.
@@ -41,4 +46,8 @@ fn get_test_uids_recursively(allure_json: &AllureJson) -> Vec<String> {
     uids
 }
 
-pub struct TestInfo;
+#[derive(Debug)]
+pub struct TestInfo {
+    /// Полное имя теста, пакет + имя класса + имя метода теста
+    full_name: String,
+}

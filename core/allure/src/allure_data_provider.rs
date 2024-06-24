@@ -1,7 +1,8 @@
+use std::future::Future;
 use std::path::Path;
 
-pub trait AllureDataProvider {
+pub trait AllureDataProvider: Clone + Send + 'static {
     /// Предоставляет контент нужного файла.
     /// path должен быть всегда относительным, относительно root папки отчета.
-    async fn get_file_string<P: AsRef<Path>>(&self, path: P) -> String;
+    fn get_file_string<P: AsRef<Path>+Send>(&self, path: P) -> impl Future<Output=String> + Send;
 }
