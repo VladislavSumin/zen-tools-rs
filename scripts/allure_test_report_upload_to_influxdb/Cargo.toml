@@ -1,0 +1,7 @@
+[package]
+name = "allure_test_report_upload_to_influxdb"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+core_allure = { path = "../../core/allure" }
