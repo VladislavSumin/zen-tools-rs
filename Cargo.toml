@@ -1,6 +1,7 @@
 [workspace]
 resolver = "2"
 members = [
+    "core/ignored_tests_parser",
     "scripts/ignored_tests_csv_collector",
     "scripts/ignored_tests_notify_telegram",
 ]
