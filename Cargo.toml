@@ -1,5 +1,16 @@
 [workspace]
 resolver = "2"
 members = [
-"scripts/ignored_tests_csv_collector",
+    "scripts/ignored_tests_csv_collector",
 ]
+
+[workspace.dependencies]
+lazy_static = { version = "1.4.0" }
+regex = { version = "1.10.4" }
+clap = { version = "4.5.4", features = ["derive"] }
+chrono = { version = "0.4.38" }
+tracing = { version = "0.1.40" }
+tracing-subscriber = { version = "0.3.18" }
+walkdir = { version = "2.5.0" }
+csv = { version = "1.3.0" }
+serde = { version = "1.0.202", features = ["derive"] }
