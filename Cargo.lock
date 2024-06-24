@@ -3,5 +3,5 @@
 version = 3
 
 [[package]]
-name = "zen-tools-rs"
+name = "ignored_tests_csv_collector"
 version = "0.1.0"
