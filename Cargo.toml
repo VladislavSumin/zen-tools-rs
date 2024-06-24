@@ -2,6 +2,7 @@
 resolver = "2"
 members = [
     "scripts/ignored_tests_csv_collector",
+    "scripts/ignored_tests_notify_telegram",
 ]
 
 [workspace.dependencies]
