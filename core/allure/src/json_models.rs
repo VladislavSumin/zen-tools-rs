@@ -2,8 +2,9 @@ use serde::Deserialize;
 
 /// Отчет Allure в json формате.
 #[derive(Deserialize, Debug)]
-pub(crate) struct AllureJson {
-    uid: String,
+pub struct AllureJson {
+    pub uid: String,
     #[serde(rename = "children")]
-    childrens: Option<Vec<AllureJson>>,
+    pub childrens: Option<Vec<AllureJson>>,
+    pub flaky: Option<bool>,
 }

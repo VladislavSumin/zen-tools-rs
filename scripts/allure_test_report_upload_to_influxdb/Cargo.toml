@@ -5,3 +5,7 @@ edition = "2021"
 
 [dependencies]
 core_allure = { path = "../../core/allure" }
+
+tokio = { workspace = true }
+tracing = { workspace = true }
+tracing-subscriber = { workspace = true }

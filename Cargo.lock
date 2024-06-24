@@ -31,6 +31,9 @@ name = "allure_test_report_upload_to_influxdb"
 version = "0.1.0"
 dependencies = [
  "core_allure",
+ "tokio",
+ "tracing",
+ "tracing-subscriber",
 ]
 
 [[package]]
@@ -219,8 +222,11 @@ checksum = "06ea2b9bc92be3c2baa9334a323ebca2d6f074ff852cd1d7b11064035cd3868f"
 name = "core_allure"
 version = "0.1.0"
 dependencies = [
+ "futures",
  "serde",
  "serde_json",
+ "tokio",
+ "tracing",
 ]
 
 [[package]]

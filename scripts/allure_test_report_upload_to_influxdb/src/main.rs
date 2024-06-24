@@ -1,8 +1,18 @@
 use std::path::{Path, PathBuf};
-use core_allure::AllureDataProvider;
+use tracing::Level;
+use core_allure::{AllureDataProvider, parse_allure_report};
 
-fn main() {
+
+#[tokio::main]
+async fn main() {
+    tracing_subscriber::fmt()
+        .with_max_level(Level::TRACE)
+        .init();
     
+    let allure_source = AllureFileSource {
+        root_path: PathBuf::from("./allure-reports")
+    };
+    let tests_info = parse_allure_report(&allure_source).await;
 }
 
 struct AllureFileSource {
