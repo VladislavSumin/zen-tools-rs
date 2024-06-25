@@ -1,3 +1,14 @@
+//! # core_allure
+//! Набор утилит для работы с Allure отчетами.
+//!
+//! ## Создание источника данных для чтения Allure отчета.
+//! Для работы с данными требуется реализация [AllureDataProvider].
+//! В библиотеке уже есть две готовые реализации: [AllureFileSource] и [AllureNetworkSource].
+//!
+//! ## Парсинг Allure отчета.
+//! Для чтения отчета необходимо вызвать функцию [parse_allure_report] которая вернет вам
+//! список всех тестов в отчете в виде вектора [TestInfo].
+
 use std::collections::HashMap;
 use std::path::PathBuf;
 use std::time::Duration;
