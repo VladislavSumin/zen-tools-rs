@@ -1,6 +1,6 @@
 use std::future::Future;
 use std::path::{Path, PathBuf};
-use tracing::Level;
+use tracing::{info, Level};
 use core_allure::{AllureDataProvider, parse_allure_report};
 
 
@@ -14,6 +14,8 @@ async fn main() {
         root_path: PathBuf::from("./allure-reports")
     };
     let tests_info = parse_allure_report(&allure_source).await;
+
+    info!("Tests:{:#?}", tests_info);
 }
 
 #[derive(Clone)]
@@ -31,10 +33,4 @@ impl AllureDataProvider for AllureFileSource {
             std::fs::read_to_string(final_path).unwrap()
         }
     }
-
-    // async fn get_file_string<P: AsRef<Path>>(&self, path: P) -> String {
-    //     let mut final_path = self.root_path.clone();
-    //     final_path.push(path);
-    //     std::fs::read_to_string(final_path).unwrap()
-    // }
 }

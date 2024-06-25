@@ -16,14 +16,14 @@ pub async fn parse_allure_report<T: AllureDataProvider>(data_provider: &T) -> Ve
     futures::future::join_all(
         uids.into_iter().map(|uid| {
             let data_provider = data_provider.clone();
-            tokio::task::spawn(async move { parse_test_info(&uid, data_provider).await })
+            tokio::task::spawn(async move { parse_test_info(&uid, &data_provider).await })
         })
     ).await.into_iter()
         .map(|result| { result.unwrap() })
         .collect()
 }
 
-async fn parse_test_info<T: AllureDataProvider>(uid: &String, data_provider: T) -> TestInfo {
+async fn parse_test_info<T: AllureDataProvider>(uid: &String, data_provider: &T) -> TestInfo {
     let test_path = PathBuf::from(format!("data/test-cases/{uid}.json"));
     let test_report = data_provider.get_file_string(test_path).await;
     let test_report: TestInfoJson = serde_json::from_str(&test_report).unwrap();
