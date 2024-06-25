@@ -56,15 +56,15 @@ fn get_test_uids_recursively(allure_json: &AllureJson) -> Vec<String> {
 #[derive(Debug)]
 pub struct TestInfo {
     /// Полное имя теста, пакет + имя класса + имя метода теста.
-    full_name: String,
+    pub full_name: String,
     /// Время старта теста.
-    start_time: DateTime<Utc>,
+    pub start_time: DateTime<Utc>,
     /// Продолжительность выполнения теста.
-    duration: Duration,
+    pub duration: Duration,
     /// Описание теста.
-    description: Option<String>,
+    pub description: Option<String>,
     /// Статус выполнения тетса.
-    status: AllureTestStatus,
+    pub status: AllureTestStatus,
     /// Количество повторных попыток запуска теста. (при успехе с первого раза будет равно 0).
-    retries_count: u32,
+    pub retries_count: u32,
 }

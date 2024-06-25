@@ -34,3 +34,13 @@ pub enum AllureTestStatus {
     Failed,
     Unknown,
 }
+
+impl AllureTestStatus {
+    pub fn is_success(&self) -> bool {
+        match self {
+            AllureTestStatus::Passed => { true }
+            AllureTestStatus::Failed => { false }
+            AllureTestStatus::Unknown => { false }
+        }
+    }
+}
