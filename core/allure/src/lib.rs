@@ -4,7 +4,7 @@ use std::path::PathBuf;
 use std::time::Duration;
 use chrono::{DateTime, Utc};
 
-pub use crate::allure_data_provider::AllureDataProvider;
+pub use crate::allure_data_provider::*;
 use crate::json_models::{AllureJson, AllureTestStatus, TestInfoJson};
 
 mod json_models;

@@ -1,9 +1,7 @@
-use std::future::Future;
-use std::path::{Path, PathBuf};
 use chrono::{DateTime, Utc};
 use influxdb::InfluxDbWriteable;
 use tracing::{info, Level};
-use core_allure::{AllureDataProvider, parse_allure_report, TestInfo};
+use core_allure::{AllureFileSource, parse_allure_report, TestInfo};
 
 
 #[tokio::main]
@@ -12,13 +10,7 @@ async fn main() {
         .with_max_level(Level::INFO)
         .init();
 
-    // let allure_source = AllureNetworkSource {
-    //     base_url: "https://s3.dzeninfra.ru/zen-mobile-allure/master/13614136/zen/ZenApp/build/artifacts/allure_report/allure-reports".to_owned()
-    // };
-
-    let allure_source = AllureFileSource {
-        root_path: PathBuf::from("./allure-reports")
-    };
+    let allure_source = AllureFileSource::new("./allure-reports");
     let tests_info = parse_allure_report(&allure_source).await;
 
     info!("Tests:{:#?}", tests_info);
@@ -56,37 +48,6 @@ fn make_aggregated_test_report(tests: &Vec<TestInfo>, branch: &str) -> IDAggrega
     report
 }
 
-#[derive(Clone)]
-struct AllureNetworkSource {
-    base_url: String,
-}
-
-impl AllureDataProvider for AllureNetworkSource {
-    fn get_file_string<P: AsRef<Path> + Send>(&self, path: P) -> impl Future<Output=String> + Send {
-        let url = format!("{}/{}", &self.base_url, path.as_ref().to_str().unwrap());
-        async {
-            reqwest::get(url).await.unwrap().text().await.unwrap()
-        }
-    }
-}
-
-#[derive(Clone)]
-struct AllureFileSource {
-    root_path: PathBuf,
-}
-
-
-impl AllureDataProvider for AllureFileSource {
-    fn get_file_string<P: AsRef<Path> + Send>(&self, path: P) -> impl Future<Output=String> + Send {
-        let root_path = self.root_path.clone();
-        async move {
-            let mut final_path = root_path.clone();
-            final_path.push(path);
-            std::fs::read_to_string(final_path).unwrap()
-        }
-    }
-}
-
 #[derive(InfluxDbWriteable, Default, Debug)]
 struct IDAggregatedTestReport {
     /// Время прогона
@@ -102,7 +63,7 @@ struct IDAggregatedTestReport {
     failed_tries: u32,
 
     /// Общее состояние прогона. Поле u32 так как с такими данными проще работать на стороне
-    /// influxdb. bool там не аггрегируются сами по себе приходится явно обрабатывать этот сценарий.
+    /// influxdb. Bool там не агрегируется сами по себе приходится явно обрабатывать этот сценарий.
     /// Хоть это поле и вычисляемое, но его удобно вычислить заранее что бы упростить итоговые
     /// запросы к базе.
     is_success: u32,

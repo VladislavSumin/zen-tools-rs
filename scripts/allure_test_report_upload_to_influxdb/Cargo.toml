@@ -9,7 +9,6 @@ core_allure = { path = "../../core/allure" }
 tokio = { workspace = true }
 tracing = { workspace = true }
 tracing-subscriber = { workspace = true }
-reqwest = { workspace = true }
 influxdb = { workspace = true }
 chrono = { workspace = true }
 log = "0.4.21"
