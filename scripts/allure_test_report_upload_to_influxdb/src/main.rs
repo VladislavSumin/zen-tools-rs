@@ -129,11 +129,9 @@ impl IDTestReport {
             duration: test_report.duration.as_millis() as u64,
             name: test_report.full_name.clone(),
             branch: branch.into(),
-
-            // TODO!!
-            author: "".to_owned(),
-            team: "".to_owned(),
-            host: "".to_owned(),
+            author: test_report.author.clone(),
+            team: test_report.team.clone(),
+            host: test_report.host.clone(),
         }
     }
 }

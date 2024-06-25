@@ -1,5 +1,4 @@
-#![allow(async_fn_in_trait)]
-
+use std::collections::HashMap;
 use std::path::PathBuf;
 use std::time::Duration;
 use chrono::{DateTime, Utc};
@@ -29,6 +28,9 @@ async fn parse_test_info<T: AllureDataProvider>(uid: &String, data_provider: &T)
     let test_path = PathBuf::from(format!("data/test-cases/{uid}.json"));
     let test_report = data_provider.get_file_string(test_path).await;
     let test_report: TestInfoJson = serde_json::from_str(&test_report).unwrap();
+    let mut labels: HashMap<_, _> = test_report.labels.iter()
+        .map(|label| { (label.name.clone(), label.value.clone()) })
+        .collect();
     TestInfo {
         full_name: test_report.full_name,
         start_time: DateTime::from_timestamp_millis(test_report.time.start).unwrap(),
@@ -36,6 +38,9 @@ async fn parse_test_info<T: AllureDataProvider>(uid: &String, data_provider: &T)
         description: test_report.description,
         status: test_report.status,
         retries_count: test_report.retries_count,
+        author: labels.remove("developer").unwrap_or_else(|| { "<no_author>".to_owned() }),
+        team: labels.remove("suite").unwrap_or_else(|| { "<no_team>".to_owned() }),
+        host: labels.remove("host").unwrap_or_else(|| { "<no_host>".to_owned() }),
     }
 }
 
@@ -67,4 +72,10 @@ pub struct TestInfo {
     pub status: AllureTestStatus,
     /// Количество повторных попыток запуска теста. (при успехе с первого раза будет равно 0).
     pub retries_count: u32,
+    /// Ник автора теста.
+    pub author: String,
+    /// Команда которой принадлежит тест.
+    pub team: String,
+    /// Хост на котором был запущен тест.
+    pub host: String,
 }

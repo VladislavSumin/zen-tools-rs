@@ -18,6 +18,7 @@ pub struct TestInfoJson {
     pub description: Option<String>,
     pub status: AllureTestStatus,
     pub retries_count: u32,
+    pub labels: Vec<AllureLabelJson>,
 }
 
 
@@ -25,6 +26,12 @@ pub struct TestInfoJson {
 pub struct AllureTimeJson {
     pub start: i64,
     pub duration: u64,
+}
+
+#[derive(Deserialize, Debug)]
+pub struct AllureLabelJson {
+    pub name: String,
+    pub value: String,
 }
 
 #[derive(Deserialize, Debug)]
