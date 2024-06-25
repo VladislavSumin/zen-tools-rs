@@ -1,9 +1,11 @@
 #![allow(async_fn_in_trait)]
 
 use std::path::PathBuf;
+use std::time::Duration;
+use chrono::{DateTime, Utc};
 
 pub use crate::allure_data_provider::AllureDataProvider;
-use crate::json_models::{AllureJson, TestInfoJson};
+use crate::json_models::{AllureJson, AllureTestStatus, TestInfoJson};
 
 mod json_models;
 mod allure_data_provider;
@@ -28,7 +30,12 @@ async fn parse_test_info<T: AllureDataProvider>(uid: &String, data_provider: &T)
     let test_report = data_provider.get_file_string(test_path).await;
     let test_report: TestInfoJson = serde_json::from_str(&test_report).unwrap();
     TestInfo {
-        full_name: test_report.full_name
+        full_name: test_report.full_name,
+        start_time: DateTime::from_timestamp_millis(test_report.time.start).unwrap(),
+        duration: Duration::from_millis(test_report.time.duration),
+        description: test_report.description,
+        status: test_report.status,
+        retries_count: test_report.retries_count,
     }
 }
 
@@ -48,6 +55,16 @@ fn get_test_uids_recursively(allure_json: &AllureJson) -> Vec<String> {
 
 #[derive(Debug)]
 pub struct TestInfo {
-    /// Полное имя теста, пакет + имя класса + имя метода теста
+    /// Полное имя теста, пакет + имя класса + имя метода теста.
     full_name: String,
+    /// Время старта теста.
+    start_time: DateTime<Utc>,
+    /// Продолжительность выполнения теста.
+    duration: Duration,
+    /// Описание теста.
+    description: Option<String>,
+    /// Статус выполнения тетса.
+    status: AllureTestStatus,
+    /// Количество повторных попыток запуска теста. (при успехе с первого раза будет равно 0).
+    retries_count: u32,
 }

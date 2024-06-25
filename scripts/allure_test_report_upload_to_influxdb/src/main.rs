@@ -10,8 +10,12 @@ async fn main() {
         .with_max_level(Level::INFO)
         .init();
 
-    let allure_source = AllureNetworkSource {
-        base_url: "https://s3.dzeninfra.ru/zen-mobile-allure/master/13614136/zen/ZenApp/build/artifacts/allure_report/allure-reports".to_owned()
+    // let allure_source = AllureNetworkSource {
+    //     base_url: "https://s3.dzeninfra.ru/zen-mobile-allure/master/13614136/zen/ZenApp/build/artifacts/allure_report/allure-reports".to_owned()
+    // };
+
+    let allure_source = AllureFileSource {
+        root_path: PathBuf::from("./allure-reports")
     };
     let tests_info = parse_allure_report(&allure_source).await;
 

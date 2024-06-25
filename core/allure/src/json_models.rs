@@ -14,4 +14,23 @@ pub struct AllureJson {
 #[serde(rename_all = "camelCase")]
 pub struct TestInfoJson {
     pub full_name: String,
+    pub time: AllureTimeJson,
+    pub description: Option<String>,
+    pub status: AllureTestStatus,
+    pub retries_count: u32,
+}
+
+
+#[derive(Deserialize, Debug)]
+pub struct AllureTimeJson {
+    pub start: i64,
+    pub duration: u64,
+}
+
+#[derive(Deserialize, Debug)]
+#[serde(rename_all = "camelCase")]
+pub enum AllureTestStatus {
+    Passed,
+    Failed,
+    Unknown,
 }
