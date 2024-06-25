@@ -12,8 +12,13 @@ async fn main() {
 
     let allure_source = AllureFileSource::new("./allure-reports");
     let tests_info = parse_allure_report(&allure_source).await;
+    let time = tests_info.first().unwrap().start_time;
 
-    info!("Tests:{:#?}", tests_info);
+    let test_report: Vec<_> = tests_info.iter().map(|report| {
+        IDTestReport::from(report, time, "master")
+    }).collect();
+    info!("Per test report: {test_report:#?}");
+
     let aggregated_report = make_aggregated_test_report(&tests_info, "master");
     info!("Aggregated report: {aggregated_report:#?}");
 }
@@ -79,7 +84,7 @@ struct IDAggregatedTestReport {
 }
 
 /// Отдельный отчет по каждому тесту в прогоне.
-#[derive(InfluxDbWriteable, Default, Debug)]
+#[derive(InfluxDbWriteable, Debug)]
 struct IDTestReport {
     /// Время прогона. Обратите внимание, для удобства работы с данными сюда пишется время
     /// прогона всех тестов в отчете, а не каждого теста в отдельности.
@@ -110,7 +115,25 @@ struct IDTestReport {
     #[influxdb(tag)]
     team: String,
 
-    /// Хост на котором выполнялся данный тест. Возможно не очень полезная инфа, но мало ли.
+    /// Хост на котором выполнялся данный тест. Возможно не очень полезно, но мало ли.
     #[influxdb(tag)]
     host: String,
+}
+
+impl IDTestReport {
+    fn from<B: Into<String>>(test_report: &TestInfo, time: DateTime<Utc>, branch: B) -> Self {
+        Self {
+            time,
+            is_success: test_report.status.is_success().into(),
+            total_tries: test_report.retries_count + 1,
+            duration: test_report.duration.as_millis() as u64,
+            name: test_report.full_name.clone(),
+            branch: branch.into(),
+
+            // TODO!!
+            author: "".to_owned(),
+            team: "".to_owned(),
+            host: "".to_owned(),
+        }
+    }
 }
