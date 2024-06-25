@@ -8,6 +8,18 @@
 //! ## Парсинг Allure отчета.
 //! Для чтения отчета необходимо вызвать функцию [parse_allure_report] которая вернет вам
 //! список всех тестов в отчете в виде вектора [TestInfo].
+//! 
+//! ## Пример использования
+//! ```
+//! use core_allure::{AllureFileSource, parse_allure_report};
+//!
+//! #[tokio::main]
+//! async fn main() {
+//!     let allure_data_source = AllureFileSource::new("./allure-reports");
+//!     let test_reports = parse_allure_report(&allure_data_source).await;
+//!     println!("Allure test reports: {test_reports:#?}");
+//! }
+//! ```
 
 use std::collections::HashMap;
 use std::path::PathBuf;
