@@ -18,6 +18,7 @@ pub struct AllureNetworkSource {
 
 impl AllureDataProvider<reqwest::Error> for AllureNetworkSource {
     fn get_file_string<P: AsRef<Path> + Send>(&self, path: P) -> impl Future<Output=Result<String, reqwest::Error>> + Send {
+        // Тут все же ожидаем что path это валидная UTF-8 строка и паникуем если это не так.
         let url = format!("{}/{}", &self.base_url, path.as_ref().to_str().unwrap());
         async {
             reqwest::get(url).await?.text().await
