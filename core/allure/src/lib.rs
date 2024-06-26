@@ -37,11 +37,16 @@ mod allure_data_provider;
 
 pub type Result<T, E> = std::result::Result<T, Error<E>>;
 
-pub async fn parse_allure_report<T: AllureDataProvider<E>, E: Send + 'static>(data_provider: &T) -> Result<Vec<TestInfo>, E> {
+pub async fn parse_allure_report<T, R, E>(data_provider: &T) -> Result<Vec<TestInfo>, E>
+where
+    T: AllureDataProvider<R, E>,
+    R: AsRef<[u8]>,
+    E: Send + 'static,
+{
     let allure_path = PathBuf::from("data/packages.json");
-    let allure_report = data_provider.get_file_string(allure_path).await
+    let allure_report = data_provider.get_file_content(allure_path).await
         .map_err(|e| { Error::DataSource(e) })?;
-    let allure_report: AllureJson = serde_json::from_str(&allure_report)?;
+    let allure_report: AllureJson = serde_json::from_slice(allure_report.as_ref())?;
     let uids = get_test_uids_recursively(&allure_report);
 
     futures::future::join_all(
@@ -62,11 +67,16 @@ pub async fn parse_allure_report<T: AllureDataProvider<E>, E: Send + 'static>(da
         .collect()
 }
 
-async fn parse_test_info<T: AllureDataProvider<E>, E: Send + 'static>(uid: &String, data_provider: &T) -> Result<TestInfo, E> {
+async fn parse_test_info<T, R, E>(uid: &String, data_provider: &T) -> Result<TestInfo, E>
+where
+    T: AllureDataProvider<R, E>,
+    R: AsRef<[u8]>,
+    E: Send + 'static,
+{
     let test_path = PathBuf::from(format!("data/test-cases/{uid}.json"));
-    let test_report = data_provider.get_file_string(test_path).await
+    let test_report = data_provider.get_file_content(test_path).await
         .map_err(|e| { Error::DataSource(e) })?;
-    let test_report: TestInfoJson = serde_json::from_str(&test_report)?;
+    let test_report: TestInfoJson = serde_json::from_slice(test_report.as_ref())?;
     let mut labels: HashMap<_, _> = test_report.labels.iter()
         .map(|label| { (label.name.clone(), label.value.clone()) })
         .collect();

@@ -12,3 +12,4 @@ tracing = { workspace = true }
 chrono = { workspace = true }
 reqwest = { workspace = true }
 thiserror = { workspace = true }
+bytes = { workspace = true }

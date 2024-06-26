@@ -1,12 +1,19 @@
 use std::future::Future;
 use std::path::{Path, PathBuf};
+use bytes::Bytes;
 
 /// Источник данных для чтения allure отчета.
+///
+/// [R] тип данных возвращаемый при загрузке данных.
 /// [E] тип ошибки которая может произойти при загрузке данных.
-pub trait AllureDataProvider<E: Send + 'static>: Clone + Send + Sync + 'static {
+pub trait AllureDataProvider<R, E>: Clone + Send + Sync + 'static
+where
+    R: AsRef<[u8]>,
+    E: Send + 'static,
+{
     /// Предоставляет контент нужного файла.
     /// [path] должен быть всегда относительным, относительно root папки отчета.
-    fn get_file_string<P: AsRef<Path> + Send>(&self, path: P) -> impl Future<Output=Result<String, E>> + Send;
+    fn get_file_content<P: AsRef<Path> + Send>(&self, path: P) -> impl Future<Output=Result<R, E>> + Send;
 }
 
 
@@ -16,12 +23,12 @@ pub struct AllureNetworkSource {
     base_url: String,
 }
 
-impl AllureDataProvider<reqwest::Error> for AllureNetworkSource {
-    fn get_file_string<P: AsRef<Path> + Send>(&self, path: P) -> impl Future<Output=Result<String, reqwest::Error>> + Send {
+impl AllureDataProvider<Bytes, reqwest::Error> for AllureNetworkSource {
+    fn get_file_content<P: AsRef<Path> + Send>(&self, path: P) -> impl Future<Output=Result<Bytes, reqwest::Error>> + Send {
         // Тут все же ожидаем что path это валидная UTF-8 строка и паникуем если это не так.
         let url = format!("{}/{}", &self.base_url, path.as_ref().to_str().unwrap());
         async {
-            reqwest::get(url).await?.text().await
+            reqwest::get(url).await?.bytes().await
         }
     }
 }
@@ -40,13 +47,13 @@ pub struct AllureFileSource {
     root_path: PathBuf,
 }
 
-impl AllureDataProvider<std::io::Error> for AllureFileSource {
-    fn get_file_string<P: AsRef<Path> + Send>(&self, path: P) -> impl Future<Output=Result<String, std::io::Error>> + Send {
+impl AllureDataProvider<Vec<u8>, std::io::Error> for AllureFileSource {
+    fn get_file_content<P: AsRef<Path> + Send>(&self, path: P) -> impl Future<Output=Result<Vec<u8>, std::io::Error>> + Send {
         let root_path = self.root_path.clone();
         async move {
             let mut final_path = root_path.clone();
             final_path.push(path);
-            std::fs::read_to_string(final_path)
+            std::fs::read(final_path)
         }
     }
 }
