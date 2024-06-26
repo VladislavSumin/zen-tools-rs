@@ -22,6 +22,7 @@
 //! ```
 
 use std::collections::HashMap;
+use std::fmt::Debug;
 use std::path::PathBuf;
 use std::time::Duration;
 use chrono::{DateTime, Utc};
@@ -34,11 +35,12 @@ use crate::json_models::{AllureJson, AllureTestStatus, TestInfoJson};
 mod json_models;
 mod allure_data_provider;
 
-pub type Result<T> = std::result::Result<T, Error>;
+pub type Result<T, E> = std::result::Result<T, Error<E>>;
 
-pub async fn parse_allure_report<T: AllureDataProvider>(data_provider: &T) -> Result<Vec<TestInfo>> {
+pub async fn parse_allure_report<T: AllureDataProvider<E>, E: Send + 'static>(data_provider: &T) -> Result<Vec<TestInfo>, E> {
     let allure_path = PathBuf::from("data/packages.json");
-    let allure_report = data_provider.get_file_string(allure_path).await;
+    let allure_report = data_provider.get_file_string(allure_path).await
+        .map_err(|e| { Error::DataSource(e) })?;
     let allure_report: AllureJson = serde_json::from_str(&allure_report)?;
     let uids = get_test_uids_recursively(&allure_report);
 
@@ -60,9 +62,10 @@ pub async fn parse_allure_report<T: AllureDataProvider>(data_provider: &T) -> Re
         .collect()
 }
 
-async fn parse_test_info<T: AllureDataProvider>(uid: &String, data_provider: &T) -> Result<TestInfo> {
+async fn parse_test_info<T: AllureDataProvider<E>, E: Send + 'static>(uid: &String, data_provider: &T) -> Result<TestInfo, E> {
     let test_path = PathBuf::from(format!("data/test-cases/{uid}.json"));
-    let test_report = data_provider.get_file_string(test_path).await;
+    let test_report = data_provider.get_file_string(test_path).await
+        .map_err(|e| { Error::DataSource(e) })?;
     let test_report: TestInfoJson = serde_json::from_str(&test_report)?;
     let mut labels: HashMap<_, _> = test_report.labels.iter()
         .map(|label| { (label.name.clone(), label.value.clone()) })
@@ -119,12 +122,15 @@ pub struct TestInfo {
 }
 
 /// Ошибки, которые могут случиться при парсинге Allure отчета.
+/// [E] тип ошибки возвращаемый [AllureDataProvider]
 #[derive(Error, Debug)]
-pub enum Error {
+pub enum Error<E> {
     #[error(transparent)]
     Json(#[from] serde_json::Error),
     #[error(transparent)]
     Join(#[from] tokio::task::JoinError),
     #[error("Invalid timestamp format")]
     TimeFormat,
+    #[error(transparent)]
+    DataSource(E),
 }
