@@ -11,7 +11,7 @@ async fn main() {
         .init();
 
     let allure_source = AllureFileSource::new("./allure-reports");
-    let tests_info = parse_allure_report(&allure_source).await;
+    let tests_info = parse_allure_report(&allure_source).await.unwrap();
     let time = tests_info.first().unwrap().start_time;
 
     let test_report: Vec<_> = tests_info.iter().map(|report| {

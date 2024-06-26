@@ -8,7 +8,7 @@
 //! ## Парсинг Allure отчета.
 //! Для чтения отчета необходимо вызвать функцию [parse_allure_report] которая вернет вам
 //! список всех тестов в отчете в виде вектора [TestInfo].
-//! 
+//!
 //! ## Пример использования
 //! ```
 //! use core_allure::{AllureFileSource, parse_allure_report};
@@ -25,38 +25,51 @@ use std::collections::HashMap;
 use std::path::PathBuf;
 use std::time::Duration;
 use chrono::{DateTime, Utc};
+use thiserror::Error;
 
 pub use crate::allure_data_provider::*;
+use crate::Error::TimeFormat;
 use crate::json_models::{AllureJson, AllureTestStatus, TestInfoJson};
 
 mod json_models;
 mod allure_data_provider;
 
-pub async fn parse_allure_report<T: AllureDataProvider>(data_provider: &T) -> Vec<TestInfo> {
+pub type Result<T> = std::result::Result<T, Error>;
+
+pub async fn parse_allure_report<T: AllureDataProvider>(data_provider: &T) -> Result<Vec<TestInfo>> {
     let allure_path = PathBuf::from("data/packages.json");
     let allure_report = data_provider.get_file_string(allure_path).await;
-    let allure_report: AllureJson = serde_json::from_str(&allure_report).unwrap();
+    let allure_report: AllureJson = serde_json::from_str(&allure_report)?;
     let uids = get_test_uids_recursively(&allure_report);
+
     futures::future::join_all(
-        uids.into_iter().map(|uid| {
-            let data_provider = data_provider.clone();
-            tokio::task::spawn(async move { parse_test_info(&uid, &data_provider).await })
+        uids
+            .into_iter()
+            .map(|uid| {
+                let data_provider = data_provider.clone();
+                tokio::task::spawn(async move { parse_test_info(&uid, &data_provider).await })
+            })
+    )
+        .await
+        .into_iter()
+        .map(|result| {
+            result
+                .map_err(|e| { Error::from(e) })
+                .and_then(|e| { e })
         })
-    ).await.into_iter()
-        .map(|result| { result.unwrap() })
-        .collect()
+        .collect::<Result<Vec<_>>>()
 }
 
-async fn parse_test_info<T: AllureDataProvider>(uid: &String, data_provider: &T) -> TestInfo {
+async fn parse_test_info<T: AllureDataProvider>(uid: &String, data_provider: &T) -> Result<TestInfo> {
     let test_path = PathBuf::from(format!("data/test-cases/{uid}.json"));
     let test_report = data_provider.get_file_string(test_path).await;
-    let test_report: TestInfoJson = serde_json::from_str(&test_report).unwrap();
+    let test_report: TestInfoJson = serde_json::from_str(&test_report)?;
     let mut labels: HashMap<_, _> = test_report.labels.iter()
         .map(|label| { (label.name.clone(), label.value.clone()) })
         .collect();
-    TestInfo {
+    let test_info = TestInfo {
         full_name: test_report.full_name,
-        start_time: DateTime::from_timestamp_millis(test_report.time.start).unwrap(),
+        start_time: DateTime::from_timestamp_millis(test_report.time.start).ok_or(TimeFormat)?,
         duration: Duration::from_millis(test_report.time.duration),
         description: test_report.description,
         status: test_report.status,
@@ -64,7 +77,9 @@ async fn parse_test_info<T: AllureDataProvider>(uid: &String, data_provider: &T)
         author: labels.remove("developer").unwrap_or_else(|| { "<no_author>".to_owned() }),
         team: labels.remove("suite").unwrap_or_else(|| { "<no_team>".to_owned() }),
         host: labels.remove("host").unwrap_or_else(|| { "<no_host>".to_owned() }),
-    }
+    };
+
+    Ok(test_info)
 }
 
 /// Возвращает все uid тестов в данном отчете.
@@ -101,4 +116,15 @@ pub struct TestInfo {
     pub team: String,
     /// Хост на котором был запущен тест.
     pub host: String,
+}
+
+/// Ошибки, которые могут случиться при парсинге Allure отчета.
+#[derive(Error, Debug)]
+pub enum Error {
+    #[error(transparent)]
+    Json(#[from] serde_json::Error),
+    #[error(transparent)]
+    Join(#[from] tokio::task::JoinError),
+    #[error("Invalid timestamp format")]
+    TimeFormat,
 }
