@@ -1,6 +1,8 @@
 use std::future::Future;
 use std::path::{Path, PathBuf};
 
+/// Источник данных для чтения allure отчета.
+/// [E] тип ошибки которая может произойти при загрузке данных.
 pub trait AllureDataProvider<E: Send + 'static>: Clone + Send + Sync + 'static {
     /// Предоставляет контент нужного файла.
     /// [path] должен быть всегда относительным, относительно root папки отчета.
