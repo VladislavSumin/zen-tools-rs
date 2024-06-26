@@ -57,7 +57,7 @@ pub async fn parse_allure_report<T: AllureDataProvider>(data_provider: &T) -> Re
                 .map_err(|e| { Error::from(e) })
                 .and_then(|e| { e })
         })
-        .collect::<Result<Vec<_>>>()
+        .collect()
 }
 
 async fn parse_test_info<T: AllureDataProvider>(uid: &String, data_provider: &T) -> Result<TestInfo> {
