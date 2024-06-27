@@ -3,6 +3,7 @@ resolver = "2"
 members = [
     "core/allure",
     "core/ignored_tests_parser",
+    "core/telegram",
     "scripts/allure_test_report_upload_to_influxdb",
     "scripts/ignored_tests_csv_collector",
     "scripts/ignored_tests_notify_telegram",
@@ -25,3 +26,4 @@ reqwest = { version = "0.12.4", features = ["json"] }
 influxdb = { version = "0.7.2", features = ["derive"] }
 thiserror = { version = "1.0.60" }
 bytes = { version = "1.6.0" }
+teloxide = { version = "0.12.2" }
