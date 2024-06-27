@@ -1,3 +1,16 @@
+//! # core_ignored_test_parser
+//! Парсер для поиска заигноренных тестов.
+//! 
+//! ## Пример использования:
+//! ```
+//! use core_ignored_tests_parser::parse_ignored_tests;
+//!
+//! #[tokio::main]
+//! async fn main() {
+//!     let ignored_tests = parse_ignored_tests("./path/to/test/root").await;
+//!     println!("Ignored tests {ignored_tests:#?}");
+//! }
+//! ```
 use std::fs;
 use std::path::Path;
 use std::process::Command;
