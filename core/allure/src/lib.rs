@@ -55,11 +55,7 @@ where
     )
         .await
         .into_iter()
-        .map(|result| {
-            result
-                .map_err(|e| { anyhow::Error::from(e) })
-                .and_then(|e| { e })
-        })
+        .map(|result| { result? })
         .collect()
 }
 
