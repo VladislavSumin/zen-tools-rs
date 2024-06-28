@@ -14,7 +14,7 @@
 //! use core_allure::{AllureFileSource, parse_allure_report};
 //!
 //! #[tokio::main]
-//! async fn main()->anyhow::Result<()> {
+//! async fn main() -> anyhow::Result<()> {
 //!     let allure_data_source = AllureFileSource::new("./allure-reports");
 //!     let test_reports = parse_allure_report(&allure_data_source).await?;
 //!     println!("Allure test reports: {test_reports:#?}");
