@@ -24,6 +24,6 @@ serde = { version = "1.0.202", features = ["derive"] }
 serde_json = { version = "1.0.117" }
 reqwest = { version = "0.12.4", features = ["json"] }
 influxdb = { version = "0.7.2", features = ["derive"] }
-thiserror = { version = "1.0.60" }
+anyhow = { version = "1.0.83" }
 bytes = { version = "1.6.0" }
 teloxide = { version = "0.12.2" }

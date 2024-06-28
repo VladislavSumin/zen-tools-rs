@@ -9,7 +9,7 @@ use bytes::Bytes;
 pub trait AllureDataProvider<R, E>: Clone + Send + Sync + 'static
 where
     R: AsRef<[u8]>,
-    E: Send + 'static,
+    E: std::error::Error + Sync + Send + 'static,
 {
     /// Предоставляет контент нужного файла.
     /// [path] должен быть всегда относительным, относительно root папки отчета.

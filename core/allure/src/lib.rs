@@ -25,27 +25,23 @@ use std::collections::HashMap;
 use std::fmt::Debug;
 use std::path::PathBuf;
 use std::time::Duration;
+use anyhow::Context;
 use chrono::{DateTime, Utc};
-use thiserror::Error;
 
 pub use crate::allure_data_provider::*;
-use crate::Error::TimeFormat;
 use crate::json_models::{AllureJson, AllureTestStatus, TestInfoJson};
 
 mod json_models;
 mod allure_data_provider;
 
-pub type Result<T, E> = std::result::Result<T, Error<E>>;
-
-pub async fn parse_allure_report<T, R, E>(data_provider: &T) -> Result<Vec<TestInfo>, E>
+pub async fn parse_allure_report<T, R, E>(data_provider: &T) -> anyhow::Result<Vec<TestInfo>>
 where
     T: AllureDataProvider<R, E>,
     R: AsRef<[u8]>,
-    E: Send + 'static,
+    E: std::error::Error + Sync + Send + 'static,
 {
     let allure_path = PathBuf::from("data/packages.json");
-    let allure_report = data_provider.get_file_content(allure_path).await
-        .map_err(|e| { Error::DataSource(e) })?;
+    let allure_report = data_provider.get_file_content(allure_path).await?;
     let allure_report: AllureJson = serde_json::from_slice(allure_report.as_ref())?;
     let uids = get_test_uids_recursively(&allure_report);
 
@@ -61,28 +57,28 @@ where
         .into_iter()
         .map(|result| {
             result
-                .map_err(|e| { Error::from(e) })
+                .map_err(|e| { anyhow::Error::from(e) })
                 .and_then(|e| { e })
         })
         .collect()
 }
 
-async fn parse_test_info<T, R, E>(uid: &String, data_provider: &T) -> Result<TestInfo, E>
+async fn parse_test_info<T, R, E>(uid: &String, data_provider: &T) -> anyhow::Result<TestInfo>
 where
     T: AllureDataProvider<R, E>,
     R: AsRef<[u8]>,
-    E: Send + 'static,
+    E: std::error::Error + Sync + Send + 'static,
 {
     let test_path = PathBuf::from(format!("data/test-cases/{uid}.json"));
-    let test_report = data_provider.get_file_content(test_path).await
-        .map_err(|e| { Error::DataSource(e) })?;
+    let test_report = data_provider.get_file_content(test_path).await?;
     let test_report: TestInfoJson = serde_json::from_slice(test_report.as_ref())?;
     let mut labels: HashMap<_, _> = test_report.labels.iter()
         .map(|label| { (label.name.clone(), label.value.clone()) })
         .collect();
     let test_info = TestInfo {
         full_name: test_report.full_name,
-        start_time: DateTime::from_timestamp_millis(test_report.time.start).ok_or(TimeFormat)?,
+        start_time: DateTime::from_timestamp_millis(test_report.time.start)
+            .context(format!("unexpected time {}", test_report.time.start))?,
         duration: Duration::from_millis(test_report.time.duration),
         description: test_report.description,
         status: test_report.status,
@@ -129,18 +125,4 @@ pub struct TestInfo {
     pub team: String,
     /// Хост на котором был запущен тест.
     pub host: String,
-}
-
-/// Ошибки, которые могут случиться при парсинге Allure отчета.
-/// [E] тип ошибки возвращаемый [AllureDataProvider]
-#[derive(Error, Debug)]
-pub enum Error<E> {
-    #[error(transparent)]
-    Json(#[from] serde_json::Error),
-    #[error(transparent)]
-    Join(#[from] tokio::task::JoinError),
-    #[error("Invalid timestamp format")]
-    TimeFormat,
-    #[error(transparent)]
-    DataSource(E),
 }
