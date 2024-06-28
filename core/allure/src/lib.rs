@@ -35,6 +35,8 @@ use crate::json_models::{AllureJson, AllureTestStatus, TestInfoJson};
 mod json_models;
 mod allure_data_provider;
 
+/// Парсит вектор всех тестов находящихся в Allure отчете переданному через [data_provider].
+/// Более подробный пример использования описан в документации к крейту.
 pub async fn parse_allure_report<T, R, E>(data_provider: &T) -> anyhow::Result<Vec<TestInfo>>
 where
     T: AllureDataProvider<R, E>,
@@ -60,6 +62,7 @@ where
         .collect()
 }
 
+/// Парсит [TestInfo] соответсвующий переданному [uid]. 
 async fn parse_test_info<T, R, E>(uid: &String, data_provider: &T) -> anyhow::Result<TestInfo>
 where
     T: AllureDataProvider<R, E>,
