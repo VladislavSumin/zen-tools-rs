@@ -75,7 +75,7 @@ where
     let test_info = TestInfo {
         full_name: test_report.full_name,
         start_time: DateTime::from_timestamp_millis(test_report.time.start)
-            .context(format!("unexpected time {}", test_report.time.start))?,
+            .with_context(|| { format!("unexpected time {}", test_report.time.start) })?,
         duration: Duration::from_millis(test_report.time.duration),
         description: test_report.description,
         status: test_report.status,
