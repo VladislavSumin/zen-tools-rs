@@ -37,8 +37,13 @@ pub struct AllureLabelJson {
 #[derive(Deserialize, Debug)]
 #[serde(rename_all = "camelCase")]
 pub enum AllureTestStatus {
+    /// Green
     Passed,
+    /// Red
     Failed,
+    /// Yellow
+    Broken,
+    /// Violet
     Unknown,
 }
 
