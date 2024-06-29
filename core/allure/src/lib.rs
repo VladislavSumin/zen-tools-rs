@@ -28,9 +28,11 @@ use std::path::PathBuf;
 use std::time::Duration;
 use anyhow::Context;
 use chrono::{DateTime, Utc};
+use futures::TryStreamExt;
 
 pub use crate::allure_data_provider::*;
-use crate::json_models::{AllureJson, AllureTestStatus, TestInfoJson};
+pub use crate::json_models::AllureTestStatus;
+use crate::json_models::{AllureJson, TestInfoJson};
 
 mod json_models;
 mod allure_data_provider;
@@ -87,6 +89,15 @@ where
         author: labels.remove("developer").unwrap_or_else(|| { "<no_author>".to_owned() }),
         team: labels.remove("suite").unwrap_or_else(|| { "<no_team>".to_owned() }),
         host: labels.remove("host").unwrap_or_else(|| { "<no_host>".to_owned() }),
+        retries: test_report.extra.retries.iter().map(|retry_info| {
+            let retry_info = RetryInfo {
+                start_time: DateTime::from_timestamp_millis(retry_info.time.start)
+                    .with_context(|| { format!("unexpected time {}", test_report.time.start) })?,
+                duration: Duration::from_millis(retry_info.time.duration),
+                status: retry_info.status,
+            };
+            Ok(retry_info)
+        }).collect::<anyhow::Result<Vec<_>>>()?,
     };
 
     Ok(test_info)
@@ -126,4 +137,13 @@ pub struct TestInfo {
     pub team: String,
     /// Хост на котором был запущен тест.
     pub host: String,
+
+    pub retries: Vec<RetryInfo>,
+}
+
+#[derive(Debug)]
+pub struct RetryInfo {
+    pub start_time: DateTime<Utc>,
+    pub duration: Duration,
+    pub status: AllureTestStatus,
 }

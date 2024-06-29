@@ -19,7 +19,7 @@ pub struct TestInfoJson {
     pub status: AllureTestStatus,
     pub retries_count: u32,
     pub labels: Vec<AllureLabelJson>,
-    pub extra: Option<AllureJsonExtra>,
+    pub extra: AllureJsonExtra,
 }
 
 
@@ -47,7 +47,7 @@ pub struct AllureJsonExtraRetry {
     pub time: AllureTimeJson,
 }
 
-#[derive(Deserialize, Debug)]
+#[derive(Deserialize, Debug, Copy, Clone)]
 #[serde(rename_all = "camelCase")]
 pub enum AllureTestStatus {
     /// Green
