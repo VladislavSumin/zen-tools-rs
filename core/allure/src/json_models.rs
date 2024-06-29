@@ -35,6 +35,18 @@ pub struct AllureLabelJson {
 }
 
 #[derive(Deserialize, Debug)]
+pub struct AllureJsonExtra {
+    pub retries: Vec<AllureJsonExtraRetry>,
+}
+
+#[derive(Deserialize, Debug)]
+pub struct AllureJsonExtraRetry {
+    pub uid: String,
+    pub status: AllureTestStatus,
+    pub tine: AllureTimeJson,
+}
+
+#[derive(Deserialize, Debug)]
 #[serde(rename_all = "camelCase")]
 pub enum AllureTestStatus {
     /// Green
@@ -52,6 +64,7 @@ impl AllureTestStatus {
         match self {
             AllureTestStatus::Passed => { true }
             AllureTestStatus::Failed => { false }
+            AllureTestStatus::Broken => { false }
             AllureTestStatus::Unknown => { false }
         }
     }
