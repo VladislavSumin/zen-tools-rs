@@ -62,7 +62,7 @@ where
         .collect()
 }
 
-/// Парсит [TestInfo] соответсвующий переданному [uid]. 
+/// Парсит [TestInfo] соответсвующий переданному [uid].
 async fn parse_test_info<T, R, E>(uid: &String, data_provider: &T) -> anyhow::Result<TestInfo>
 where
     T: AllureDataProvider<R, E>,
@@ -71,7 +71,8 @@ where
 {
     let test_path = PathBuf::from(format!("data/test-cases/{uid}.json"));
     let test_report = data_provider.get_file_content(test_path).await?;
-    let test_report: TestInfoJson = serde_json::from_slice(test_report.as_ref())?;
+    let test_report: TestInfoJson = serde_json::from_slice(test_report.as_ref())
+        .with_context(|| { format!("Failed to parse test report, uid={}", uid) })?;
     let mut labels: HashMap<_, _> = test_report.labels.iter()
         .map(|label| { (label.name.clone(), label.value.clone()) })
         .collect();
